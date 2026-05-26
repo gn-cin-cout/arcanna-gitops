@@ -1,0 +1,33 @@
+# ── Phase 2 ── Infra: Kafka + KRaft (CFK) ────────────────────────────────────
+# Managed by CFK operator — uses confluentinc public images. No GCR key needed.
+# Pre-requisite: Confluent operator installed. See argocd/bootstrap/operators-install.md
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-kafka
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/kafka
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/kafka.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

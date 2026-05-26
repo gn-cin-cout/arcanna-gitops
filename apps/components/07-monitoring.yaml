@@ -1,0 +1,43 @@
+# ── Phase 7 ── App: Monitoring (api + shipper) ────────────────────────────────
+# REQUIRES: GCR pull secret + image tag from Arcanna team.
+# Dual-container pod: monitoring_api (9801) + monitoring_shipper (9802).
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/monitoring
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/services/monitoring.yaml
+      parameters:
+        - name: image.tag
+          value: "ARCANNA_IMAGE_TAG"
+        # Expose monitoring via NodePort when no ingress is available
+        - name: service.type
+          value: NodePort
+        - name: service.nodePort.api
+          value: "31402"
+        - name: service.nodePort.shipper
+          value: "31412"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

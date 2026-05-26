@@ -1,0 +1,33 @@
+# ── Phase 3 ── Infra: Kibana (ECK) ───────────────────────────────────────────
+# Depends on Elasticsearch being ready (wave 2).
+# Managed by ECK operator — uses elastic.co images. No GCR key needed.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-kibana
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/kibana
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/kibana.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,44 @@
+# ── Phase 2 ── Infra: Elasticsearch (ECK) ────────────────────────────────────
+# Managed by ECK operator — uses elastic.co images (not GCR). No GCR key needed.
+# Pre-requisite: ECK operator installed. See argocd/bootstrap/operators-install.md
+#
+# After sync, ECK creates:
+#   Service:  aiops-sandbox-es-http      (port 9200, HTTPS)
+#   Secret:   aiops-sandbox-es-elastic-user  (elastic superuser password)
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-elasticsearch
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/elasticsearch
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/elasticsearch.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+  # Tell ArgoCD how to assess Elasticsearch health (ECK custom resource).
+  ignoreDifferences:
+    - group: elasticsearch.k8s.elastic.co
+      kind: Elasticsearch
+      jsonPointers:
+        - /metadata/annotations

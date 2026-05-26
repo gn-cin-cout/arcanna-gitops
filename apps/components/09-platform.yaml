@@ -1,0 +1,49 @@
+
+# ── Phase 9 ── App: Frontend (React) ──────────────────────────────────────────
+# REQUIRES: GCR pull secret + image tag from Arcanna team.
+# backendUrl and monitoringUrl MUST be set once you know your GKE node IP
+# or have an ingress/load balancer in front of the REST API.
+#
+# To find the node IP:
+#   kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'
+#
+# Then set:
+#   backendUrl:    http://<NODE_IP>:31301
+#   monitoringUrl: http://<NODE_IP>:31302
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/aiops-platform
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/aiops-platform.yaml
+      parameters:
+        - name: image.tag
+          value: "ARCANNA_IMAGE_TAG"
+        - name: backendUrl
+          value: "http://REPLACE_WITH_NODE_IP:31301"
+        - name: monitoringUrl
+          value: "http://REPLACE_WITH_NODE_IP:31302"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

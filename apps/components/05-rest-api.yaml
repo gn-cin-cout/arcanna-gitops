@@ -1,0 +1,40 @@
+# ── Phase 5 ── App: REST API ──────────────────────────────────────────────────
+# REQUIRES: GCR pull secret + image tag from Arcanna team.
+# Pre-requisite: gcr-pull-secret + arcanna-app-credentials in namespace 'arcanna'.
+#
+# Replace ARCANNA_IMAGE_TAG with the actual tag provided by Arcanna team.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-rest-api
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/aiops-rest-api
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/aiops-rest-api.yaml
+      parameters:
+        - name: image.tag
+          value: "ARCANNA_IMAGE_TAG"   # e.g. v1.78.1
+        - name: secrets.create
+          value: "false"              # secret pre-created via secrets-setup.md
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,34 @@
+# ── Phase 1 ── Infra: PostgreSQL ──────────────────────────────────────────────
+# Public image (postgres:16.4). No GCR key needed.
+# Pre-requisite: secret 'postgres-credentials' must exist in namespace 'arcanna'.
+#   See argocd/bootstrap/secrets-setup.md
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-postgres
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/postgres
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/postgres.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

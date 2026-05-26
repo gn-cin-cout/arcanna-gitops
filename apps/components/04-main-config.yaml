@@ -1,0 +1,35 @@
+
+# ── Phase 4 ── Config: Shared ConfigMap ───────────────────────────────────────
+# Deploys the 'main-config' ConfigMap consumed by all Arcanna services.
+# Also deploys per-service ConfigMaps (hypervisor-config, exposer-config, etc.).
+# No images needed — pure ConfigMap, no GCR required.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-main-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://github.com/gn-cin-cout/arcanna-helm
+    targetRevision: HEAD
+    path: charts/main-config
+    helm:
+      valueFiles:
+        - ../../envs/gke-sandbox/_common.yaml
+        - ../../envs/gke-sandbox/main-config.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arcanna
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

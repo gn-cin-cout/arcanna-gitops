@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# App of Apps — root Application.
+#
+# Apply this to ArgoCD ONCE to bootstrap all child Applications:
+#   kubectl apply -f argocd/apps/app-of-apps.yaml
+#
+# After that, everything in argocd/apps/components/ is picked up automatically.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arcanna-sandbox
+  namespace: argocd
+spec:
+  project: arcanna
+
+  source:
+    # Point this at YOUR arcanna-gitops repo once it is pushed.
+    repoURL: https://github.com/gn-cin-cout/arcanna-gitops
+    targetRevision: HEAD
+    path: apps/components
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd  # child Application objects live in argocd namespace
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
