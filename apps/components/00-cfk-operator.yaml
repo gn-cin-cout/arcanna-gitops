@@ -1,0 +1,33 @@
+# ── Wave 0 ── Operator: CFK (Confluent for Kubernetes) ───────────────────────
+# Installs the Confluent operator which manages Kafka and KRaftController CRs.
+# Must be ready before wave 2 (kafka) can sync.
+# Chart source: https://packages.confluent.io/helm
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cfk-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://packages.confluent.io/helm
+    chart: confluent-for-kubernetes
+    targetRevision: 0.1033.3
+    helm:
+      values: |
+        # Operator watches all namespaces by default.
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: confluent
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

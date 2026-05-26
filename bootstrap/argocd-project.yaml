@@ -9,27 +9,27 @@ spec:
   description: Arcanna AIOps platform — sandbox deployment
 
   sourceRepos:
-    # Chart source repo (arcanna-helm). Replace with your actual remote URL.
     - https://github.com/gn-cin-cout/arcanna-helm
-    # GitOps repo (this repo — arcanna-gitops). Replace with your actual remote URL.
     - https://github.com/gn-cin-cout/arcanna-gitops
+    # Operator Helm repos
+    - https://helm.elastic.co
+    - https://packages.confluent.io/helm
 
   destinations:
     - namespace: arcanna
-      server: https://kubernetes.default.svc  # in-cluster; replace if ArgoCD is external
+      server: https://kubernetes.default.svc
     - namespace: argocd
+      server: https://kubernetes.default.svc
+    # ECK operator namespace
+    - namespace: elastic-system
+      server: https://kubernetes.default.svc
+    # CFK operator namespace
+    - namespace: confluent
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
-    # ECK CRDs (Elasticsearch, Kibana)
-    - group: elasticsearch.k8s.elastic.co
-      kind: Elasticsearch
-    - group: kibana.k8s.elastic.co
-      kind: Kibana
-    # CFK CRDs (Kafka, KRaftController)
-    - group: platform.confluent.io
-      kind: Kafka
-    - group: platform.confluent.io
-      kind: KRaftController
+    # Allow all cluster-scoped resources (operators install CRDs, ClusterRoles, etc.)
+    - group: "*"
+      kind: "*"

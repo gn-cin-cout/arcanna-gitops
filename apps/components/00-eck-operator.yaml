@@ -1,0 +1,34 @@
+# ── Wave 0 ── Operator: ECK (Elastic Cloud on Kubernetes) ────────────────────
+# Installs the ECK operator which manages Elasticsearch and Kibana CRs.
+# Must be ready before wave 2 (elasticsearch, kibana) can sync.
+# Chart source: https://helm.elastic.co
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://helm.elastic.co
+    chart: eck-operator
+    targetRevision: 2.16.1
+    helm:
+      values: |
+        # Watch all namespaces (default). Restrict to arcanna if needed:
+        # managedNamespaces: ["arcanna"]
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
