@@ -9,7 +9,7 @@ metadata:
   name: arcanna-redis
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: arcanna
 

@@ -17,7 +17,7 @@ metadata:
   name: arcanna-platform
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   project: arcanna
 

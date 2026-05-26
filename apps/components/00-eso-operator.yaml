@@ -1,0 +1,36 @@
+# ── Wave 0 ── Operator: External Secrets Operator (ESO) ──────────────────────
+# Installs ESO which syncs secrets from Google Secret Manager into K8s Secrets.
+# Service account is annotated for Workload Identity — no JSON key needed.
+# Must be ready before wave 1 (external-secrets-config) can sync.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eso-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: arcanna
+
+  source:
+    repoURL: https://charts.external-secrets.io
+    chart: external-secrets
+    targetRevision: 0.9.20
+    helm:
+      values: |
+        serviceAccount:
+          annotations:
+            # Workload Identity: binds ESO K8s SA to GCP SA
+            iam.gke.io/gcp-service-account: arcanna-eso-sa@playground-s-11-1bc8eaaf.iam.gserviceaccount.com
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-secrets
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
